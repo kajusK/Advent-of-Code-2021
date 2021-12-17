@@ -68,11 +68,11 @@ class Packet {
             case 4:
                 return this.literal
             case 5:
-                return this.subpackets[0].literal > this.subpackets[1].literal ? 1 : 0
+                return this.subpackets[0].result() > this.subpackets[1].result() ? 1 : 0
             case 6:
-                return this.subpackets[0].literal < this.subpackets[1].literal ? 1 : 0
+                return this.subpackets[0].result() < this.subpackets[1].result() ? 1 : 0
             case 7:
-                return this.subpackets[0].literal == this.subpackets[1].literal ? 1 : 0
+                return this.subpackets[0].result() == this.subpackets[1].result() ? 1 : 0
         }
         return NaN
     }
@@ -84,5 +84,4 @@ const data = fs.readFileSync('16/input.txt', 'utf8').trim().split('').map(v =>
 
 const packet = new Packet(data)
 console.log("Part 1: "+packet.sumVersions())
-/* TODO: Gives incorrect result for full input, works for examples */
 console.log("Part 2: "+packet.result())
