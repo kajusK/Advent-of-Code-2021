@@ -1,54 +1,51 @@
-class DeterministicDice {
-    number = 0
-
-    roll(times: number): number {
-        let sum = 0
-        for (let i = 0; i < times; i++) {
-            sum += ++this.number
-        }
-        return sum
-    }
+interface Player {
+    score: number,
+    position: number
 }
 
-class Game {
-    score1 = 0
-    score2 = 0
-    player1: number
-    player2: number
-    dice = new DeterministicDice()
-
-    constructor(pos1: number, pos2: number) {
-        this.player1 = pos1
-        this.player2 = pos2
-    }
-
-    private move(pos: number): number {
-        pos += this.dice.roll(3)
-        pos %= 10
-        return pos == 0 ? 10 : pos
-    }
-
-    round(winScore: number): boolean {
-        this.player1 = this.move(this.player1)
-        this.score1 += this.player1
-        if (this.score1 >= winScore) {
-            return true
-        }
-        this.player2 = this.move(this.player2)
-        this.score2 += this.player2
-        if (this.score2 >= winScore) {
-            return true
-        }
-        return false
-    }
-
-    score(): number {
-        const score = this.score1 > this.score2 ? this.score2 : this.score1
-        return score*this.dice.number
-    }
+function move(player: Player, steps: number): Player {
+    let pos = (player.position + steps) % 10
+    pos = pos == 0 ? 10 : pos
+    return {score: player.score + pos, position: pos}
 }
 
-const game = new Game(8, 3)
-while (!game.round(1000)) {}
+function part1(current: Player, second: Player, dice: number): number {
+    if (second.score >= 1000) {
+        return current.score * dice
+    }
 
-console.log("Part 1: "+game.score())
+    let roll = 0
+    for (let i = 0; i < 3; i++) {
+        roll += ++dice
+    }
+
+    return part1(second, move(current, roll), dice)
+}
+
+const map = new Map<string, Array<number>>()
+const diracRolls = [3, 4, 5, 6, 7, 8, 9]
+const diracCount = [1, 3, 6, 7, 6, 3, 1]
+
+function part2(current: Player, second: Player): Array<number> {
+    if (second.score >= 21) {
+        return [0, 1]
+    }
+    const key = JSON.stringify([current, second])
+    if (map.has(key)) {
+        return map.get(key)!
+    }
+
+    const wins = [0, 0]
+    diracRolls.forEach(roll => {
+        const result = part2(second, move(current, roll)).map(v => v*diracCount[roll-3])
+        wins[0] += result[1]
+        wins[1] += result[0]
+    })
+    map.set(key, wins)
+    return wins
+}
+
+const player1: Player = {score: 0, position: 8}
+const player2: Player = {score: 0, position: 3}
+console.log("Part 1: " + part1(player1, player2, 0))
+console.log("Part 2: " + Math.max(...part2(player1, player2)))
